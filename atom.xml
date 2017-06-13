@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Binxin&#39;s Blog</title>
+  
+  <link href="/atom.xml" rel="self"/>
+  
+  <link href="http://zhoubg.cn/"/>
+  <updated>2017-06-13T05:50:33.662Z</updated>
+  <id>http://zhoubg.cn/</id>
+  
+  <author>
+    <name>Binxin</name>
+    
+  </author>
+  
+  <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>SSH免密码登录原理及配置</title>
+    <link href="http://zhoubg.cn/2016/04/01/ssh-login-without-password/"/>
+    <id>http://zhoubg.cn/2016/04/01/ssh-login-without-password/</id>
+    <published>2016-04-01T12:30:30.000Z</published>
+    <updated>2017-06-13T05:50:33.662Z</updated>
+    
+    <content type="html"><![CDATA[<h2 id="SSH免密登录原理"><a href="#SSH免密登录原理" class="headerlink" title="SSH免密登录原理"></a>SSH免密登录原理</h2><h3 id="SSH免密登陆配置图示"><a href="#SSH免密登陆配置图示" class="headerlink" title="SSH免密登陆配置图示"></a>SSH免密登陆配置图示</h3><p><img src="http://7xrysx.com1.z0.glb.clouddn.com/SSH%E5%85%8D%E5%AF%86%E7%99%BB%E5%BD%95%E9%85%8D%E7%BD%AE.jpg" alt="SSH免密登陆配置" title="ssh-mian-mi-deng-lu"><br><a id="more"></a></p>
+<h3 id="SSH免密登录原理图示"><a href="#SSH免密登录原理图示" class="headerlink" title="SSH免密登录原理图示"></a>SSH免密登录原理图示</h3><p><img src="http://7xrysx.com1.z0.glb.clouddn.com/SSH%E5%85%8D%E5%AF%86%E7%99%BB%E5%BD%95%E5%8E%9F%E7%90%86.jpg" alt="SSH免密登录原理"></p>
+<h2 id="具体配置操作"><a href="#具体配置操作" class="headerlink" title="具体配置操作"></a>具体配置操作</h2><h3 id="环境准备"><a href="#环境准备" class="headerlink" title="环境准备"></a>环境准备</h3><ol>
+<li>操作系统：centos 6.4</li>
+<li>serverA：  192.168.100.129</li>
+<li>serverB：  192.168.100.130</li>
+</ol>
+<h3 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h3><p>没做任何配置前从serverA上SSH登录到serverB时需要输入密码的（如果是第一次登录，输入密码前还会询问授权yes/no，只管输入yes就行）：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">[binxin@serverA ~]$ ssh binxin@serverB</div><div class="line">binxin@serverb<span class="string">'s password: </span></div><div class="line">Last login: Fri Apr  1 00:35:41 2016 from servera</div><div class="line">[binxin@serverB ~]$</div></pre></td></tr></table></figure>
+<p>下面开始免密登陆的配置：</p>
+<ul>
+<li>在serveA上生成秘钥对：</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div></pre></td><td class="code"><pre><div class="line">[binxin@serverA ~]$ ssh-keygen -t rsa</div><div class="line">Generating public/private rsa key pair.</div><div class="line">Enter file <span class="keyword">in</span> <span class="built_in">which</span> to save the key (/home/binxin/.ssh/id_rsa): </div><div class="line">Enter passphrase (empty <span class="keyword">for</span> no passphrase): </div><div class="line">Enter same passphrase again: </div><div class="line">Your identification has been saved <span class="keyword">in</span> /home/binxin/.ssh/id_rsa.</div><div class="line">Your public key has been saved <span class="keyword">in</span> /home/binxin/.ssh/id_rsa.pub.</div><div class="line">The key fingerprint is:</div><div class="line">f2:f1:00:ca:b0:d0:3c:52:ac:9b:b7:0d:7e:62:f3:39 binxin@serverA</div><div class="line">The key<span class="string">'s randomart image is:</span></div><div class="line">+--[ RSA 2048]----+</div><div class="line">| ..              |</div><div class="line">| +.              |</div><div class="line">|o.=   .          |</div><div class="line">|.o = . .         |</div><div class="line">| o. o . S        |</div><div class="line">|o o    o +       |</div><div class="line">| o +    . .      |</div><div class="line">|  * E.           |</div><div class="line">| . =o.           |</div><div class="line">+-----------------+</div><div class="line">[binxin@serverA ~]$</div></pre></td></tr></table></figure>
+<p>查看用户目录下的ssh（隐藏的）文件夹，秘钥对已经生成，公钥id_rsa.pub，私钥id_rsa</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">[binxin@serverA ~]$ <span class="built_in">cd</span> .ssh/</div><div class="line">[binxin@serverA .ssh]$ ls</div><div class="line">id_rsa  id_rsa.pub  known_hosts</div><div class="line">[binxin@serverA .ssh]$</div></pre></td></tr></table></figure>
+<ul>
+<li>通过scp命令复制serverA的公钥到serverB上</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">[binxin@serverA .ssh]$ scp ~/.ssh/id_rsa.pub binxin@serverB:/home/binxin/id_rsa.pub</div><div class="line">binxin@serverb<span class="string">'s password: </span></div><div class="line">id_rsa.pub                                           100%  396     0.4KB/s   00:00    </div><div class="line">[binxin@serverA .ssh]$</div></pre></td></tr></table></figure>
+<ul>
+<li>登录serverB，将上步靠过来的公钥添加到授权列表文件authorized_keys中，刚开始没有这个文件，追加的时候自动生成了</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">[binxin@serverB ~]$ <span class="built_in">cd</span> .ssh/</div><div class="line">[binxin@serverB .ssh]$ ls</div><div class="line">[binxin@serverB .ssh]$ cat ~/id_rsa.pub &gt;&gt; ~/.ssh/authorized_keys</div><div class="line">[binxin@serverB .ssh]$ ls</div><div class="line">authorized_keys</div><div class="line">[binxin@serverB .ssh]$</div></pre></td></tr></table></figure>
+<ul>
+<li>authorized_keys文件的权限必须为600，ssh目录权限必须为700，手动修改权限</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">[binxin@serverB ~]$ chmod 700 ~/.ssh </div><div class="line">[binxin@serverB ~]$ chmod 600 ~/.ssh/authorized_keys</div></pre></td></tr></table></figure>
+<ul>
+<li>检验配置是否成功，从serverA通过ssh登陆到serverB，发现不用输密码直接登陆成功了，搞定！</li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">[binxin@serverA .ssh]$ ssh binxin@serverB</div><div class="line">Last login: Fri Apr  1 00:46:54 2016 from servera</div><div class="line">[binxin@serverB ~]$</div></pre></td></tr></table></figure>
+<h2 id="可能的问题"><a href="#可能的问题" class="headerlink" title="可能的问题"></a>可能的问题</h2><h3 id="权限问题"><a href="#权限问题" class="headerlink" title="权限问题"></a>权限问题</h3><p>配置完authorized_keys一直不生效，很可能是因为.ssh目录和下面文件的权限问题导致的，因为目录的权限已经超过了sshd的要求权限。如果希望ssh公钥生效需满足至少下面两个条件：.ssh目录的权限必须是700，.ssh/authorized_keys文件权限必须是600</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;h2 id=&quot;SSH免密登录原理&quot;&gt;&lt;a href=&quot;#SSH免密登录原理&quot; class=&quot;headerlink&quot; title=&quot;SSH免密登录原理&quot;&gt;&lt;/a&gt;SSH免密登录原理&lt;/h2&gt;&lt;h3 id=&quot;SSH免密登陆配置图示&quot;&gt;&lt;a href=&quot;#SSH免密登陆配置图示&quot; class=&quot;headerlink&quot; title=&quot;SSH免密登陆配置图示&quot;&gt;&lt;/a&gt;SSH免密登陆配置图示&lt;/h3&gt;&lt;p&gt;&lt;img src=&quot;http://7xrysx.com1.z0.glb.clouddn.com/SSH%E5%85%8D%E5%AF%86%E7%99%BB%E5%BD%95%E9%85%8D%E7%BD%AE.jpg&quot; alt=&quot;SSH免密登陆配置&quot; title=&quot;ssh-mian-mi-deng-lu&quot;&gt;&lt;br&gt;
+    
+    </summary>
+    
+      <category term="linux" scheme="http://zhoubg.cn/categories/linux/"/>
+    
+    
+      <category term="linux" scheme="http://zhoubg.cn/tags/linux/"/>
+    
+      <category term="SSH" scheme="http://zhoubg.cn/tags/SSH/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Hello World 2016</title>
+    <link href="http://zhoubg.cn/2016/03/28/hello-world/"/>
+    <id>http://zhoubg.cn/2016/03/28/hello-world/</id>
+    <published>2016-03-28T12:30:20.000Z</published>
+    <updated>2017-06-13T05:50:33.662Z</updated>
+    
+    <content type="html"><![CDATA[<p>Welcome to <a href="https://hexo.io/" target="_blank" rel="external">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="external">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="external">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="external">GitHub</a>.<br><a id="more"></a></p>
+<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo new <span class="string">"My New Post"</span></div></pre></td></tr></table></figure>
+<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="external">Writing</a></p>
+<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo server</div></pre></td></tr></table></figure>
+<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="external">Server</a></p>
+<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo generate</div></pre></td></tr></table></figure>
+<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="external">Generating</a></p>
+<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo deploy</div></pre></td></tr></table></figure>
+<p>More info: <a href="https://hexo.io/docs/deployment.html" target="_blank" rel="external">Deployment</a></p>
+<blockquote>
+<p>最近访客</p>
+<div class="ds-recent-visitors" data-num-items="28" data-avatar-size="42" id="ds-recent-visitors"></div>
+
+</blockquote>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;Welcome to &lt;a href=&quot;https://hexo.io/&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;Hexo&lt;/a&gt;! This is your very first post. Check &lt;a href=&quot;https://hexo.io/docs/&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;documentation&lt;/a&gt; for more info. If you get any problems when using Hexo, you can find the answer in &lt;a href=&quot;https://hexo.io/docs/troubleshooting.html&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;troubleshooting&lt;/a&gt; or you can ask me on &lt;a href=&quot;https://github.com/hexojs/hexo/issues&quot; target=&quot;_blank&quot; rel=&quot;external&quot;&gt;GitHub&lt;/a&gt;.&lt;br&gt;
+    
+    </summary>
+    
+      <category term="Diary" scheme="http://zhoubg.cn/categories/Diary/"/>
+    
+    
+  </entry>
+  
+</feed>
