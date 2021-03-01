@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>SSH免密登录原理 | Hexo</title>
+  <meta name="keywords" content=" linux ">
+  <meta name="description" content="SSH免密登录原理 | Hexo">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="description" content="作者：leapMia 原文连接：https:&#x2F;&#x2F;blog.leapmie.com&#x2F;archives&#x2F;418  1. HTTPS随着 HTTPS 建站的成本下降，现在大部分的网站都已经开始用上 HTTPS 协议。大家都知道 HTTPS 比 HTTP 安全，也听说过与 HTTPS 协议相关的概念有 SSL 、非对称加密、 CA证书等，但对于以下灵魂三拷问可能就答不上了：  为什么用了 HTTPS 就">
+<meta property="og:type" content="article">
+<meta property="og:title" content="HTTPS原理分析">
+<meta property="og:url" content="http://yoursite.com/2021/03/01/HTTPS%20%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="作者：leapMia 原文连接：https:&#x2F;&#x2F;blog.leapmie.com&#x2F;archives&#x2F;418  1. HTTPS随着 HTTPS 建站的成本下降，现在大部分的网站都已经开始用上 HTTPS 协议。大家都知道 HTTPS 比 HTTP 安全，也听说过与 HTTPS 协议相关的概念有 SSL 、非对称加密、 CA证书等，但对于以下灵魂三拷问可能就答不上了：  为什么用了 HTTPS 就">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://img.zhoubg.cn/static/1378987910.png">
+<meta property="og:image" content="http://img.zhoubg.cn/static/2410496311.png">
+<meta property="og:image" content="http://img.zhoubg.cn/static/1148530856.png">
+<meta property="og:image" content="http://img.zhoubg.cn/static/1504265182.png">
+<meta property="og:image" content="http://img.zhoubg.cn/static/3247911170.jpg">
+<meta property="article:published_time" content="2021-03-01T21:42:40.997Z">
+<meta property="article:modified_time" content="2021-03-01T21:42:40.997Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="web">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://img.zhoubg.cn/static/1378987910.png">
+
+
+<link rel="icon" href="/img/avatar.jpg">
+
+<link href="/css/style.css?v=1.1.0" rel="stylesheet">
+
+<link href="/css/hl_theme/atom-light.css?v=1.1.0" rel="stylesheet">
+
+<link href="//cdn.jsdelivr.net/npm/animate.css@4.1.0/animate.min.css" rel="stylesheet">
+
+<script src="//cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+<script src="/js/titleTip.js?v=1.1.0" ></script>
+
+<script src="//cdn.jsdelivr.net/npm/highlightjs@9.16.2/highlight.pack.min.js"></script>
+<script>
+    hljs.initHighlightingOnLoad();
+</script>
+
+<script src="//cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.js"></script>
+
+
+
+<script src="//cdn.jsdelivr.net/npm/jquery.cookie@1.4.1/jquery.cookie.min.js" ></script>
+
+<script src="/js/iconfont.js?v=1.1.0" ></script>
+
+<meta name="generator" content="Hexo 4.2.1"></head>
+<div style="display: none">
+  <input class="theme_disqus_on" value="false">
+  <input class="theme_preload_comment" value="">
+  <input class="theme_blog_path" value="">
+  <input id="theme_shortcut" value="true" />
+</div>
+
+
+<body>
+<aside class="nav">
+    <div class="nav-left">
+        <a href="/" class="avatar_target">
+    <img class="avatar" src="/img/avatar.jpg" />
+</a>
+<div class="author">
+    <span>John Doe</span>
+</div>
+
+<div class="icon">
+    
+        
+        <a title="rss" href="/atom.xml" target="_blank">
+            
+                <svg class="iconfont-svg" aria-hidden="true">
+                    <use xlink:href="#icon-rss"></use>
+                </svg>
+            
+        </a>
+        
+    
+        
+        <a title="github" href="https://github.com/yelog" target="_blank">
+            
+                <svg class="iconfont-svg" aria-hidden="true">
+                    <use xlink:href="#icon-github"></use>
+                </svg>
+            
+        </a>
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+        <a title="oschina" href="https://my.oschina.net/yelog" target="_blank">
+            
+                <svg class="iconfont-svg" aria-hidden="true">
+                    <use xlink:href="#icon-oschina"></use>
+                </svg>
+            
+        </a>
+        
+    
+        
+    
+        
+        <a title="email" href="mailto:992132705@qq.com" target="_blank">
+            
+                <svg class="iconfont-svg" aria-hidden="true">
+                    <use xlink:href="#icon-email"></use>
+                </svg>
+            
+        </a>
+        
+    
+        
+        <a title="qq" href="http://wpa.qq.com/msgrd?v=3&uin=992132705&site=qq&menu=yes" target="_blank">
+            
+                <svg class="iconfont-svg" aria-hidden="true">
+                    <use xlink:href="#icon-qq"></use>
+                </svg>
+            
+        </a>
+        
+    
+        
+    
+        
+    
+</div>
+
+
+
+
+<ul>
+    <li><div class="all active" data-rel="All">All<small>(7)</small></div></li>
+    
+        
+            
+            <li><div data-rel="Java并发">Java并发<small>(3)</small></div>
+                
+            </li>
+            
+        
+    
+        
+            
+            <li><div data-rel="linux">linux<small>(1)</small></div>
+                
+            </li>
+            
+        
+    
+        
+            
+            <li><div data-rel="web">web<small>(1)</small></div>
+                
+            </li>
+            
+        
+    
+</ul>
+<div class="left-bottom">
+    <div class="menus">
+    
+    
+    
+    
+    </div>
+    <div></div>
+</div>
+<input type="hidden" id="yelog_site_posts_number" value="7">
+
+<div style="display: none">
+    <span id="busuanzi_value_site_uv"></span>
+    <span id="busuanzi_value_site_pv"></span>
+</div>
+
+    </div>
+    <div class="nav-right">
+        <div class="friends-area">
+    <div class="friends-title">
+        Links
+        <i class="iconfont icon-left"></i>
+    </div>
+    <div class="friends-content">
+        <ul>
+            
+            <li><a target="_blank" href="http://yelog.org/">叶落阁</a></li>
+            
+        </ul>
+    </div>
+</div>
+        <div class="title-list">
+    <div class="right-top">
+        <div id="default-panel">
+            <i class="iconfont icon-search" data-title="搜索 快捷键 i"></i>
+            <div class="right-title">All</div>
+            <i class="iconfont icon-file-tree" data-title="切换到大纲视图 快捷键 w"></i>
+        </div>
+        <div id="search-panel">
+            <i class="iconfont icon-left" data-title="返回"></i>
+            <input id="local-search-input" />
+            <label class="border-line" for="input"></label>
+            <i class="iconfont icon-case-sensitive" data-title="大小写敏感"></i>
+            <i class="iconfont icon-tag" data-title="标签"></i>
+        </div>
+        <div id="outline-panel" style="display: none">
+            <div class="right-title">大纲</div>
+            <i class="iconfont icon-list" data-title="切换到文章列表"></i>
+        </div>
+    </div>
+
+    <div class="tags-list">
+    <input id="tag-search" />
+    <div class="tag-wrapper">
+        
+            <li class="article-tag-list-item">
+                <i class="iconfont icon-tag"></i><a>Java并发</a>
+            </li>
+        
+            <li class="article-tag-list-item">
+                <i class="iconfont icon-tag"></i><a>linux</a>
+            </li>
+        
+            <li class="article-tag-list-item">
+                <i class="iconfont icon-tag"></i><a>web</a>
+            </li>
+        
+    </div>
+
+</div>
+
+    
+    <nav id="title-list-nav">
+        
+        <a  class="All web "
+           href="/2021/03/01/HTTPS%20%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90/"
+           data-tag="web"
+           data-author="" >
+            <span class="post-title" title="HTTPS原理分析">HTTPS原理分析</span>
+            <span class="post-date" title="2021-03-01 21:42:40">2021/03/01</span>
+        </a>
+        
+        <a  class="All "
+           href="/2021/03/01/JVM%E7%AC%94%E8%AE%B0/"
+           data-tag=""
+           data-author="" >
+            <span class="post-title" title="JVM笔记">JVM笔记</span>
+            <span class="post-date" title="2021-03-01 21:42:40">2021/03/01</span>
+        </a>
+        
+        <a  class="All Java并发 "
+           href="/2021/03/01/Java%20Volatile%E5%85%B3%E9%94%AE%E5%AD%97/"
+           data-tag="Java并发"
+           data-author="" >
+            <span class="post-title" title="Java Volatile 关键字">Java Volatile 关键字</span>
+            <span class="post-date" title="2021-03-01 21:42:40">2021/03/01</span>
+        </a>
+        
+        <a  class="All Java并发 "
+           href="/2021/03/01/Java%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%EF%BC%88JMM%EF%BC%89/"
+           data-tag="Java并发"
+           data-author="" >
+            <span class="post-title" title="Java内存模型（JMM）">Java内存模型（JMM）</span>
+            <span class="post-date" title="2021-03-01 21:42:40">2021/03/01</span>
+        </a>
+        
+        <a  class="All Java并发 "
+           href="/2021/03/01/Java%E5%90%8C%E6%AD%A5%E5%9D%97/"
+           data-tag="Java并发"
+           data-author="" >
+            <span class="post-title" title="Java同步块">Java同步块</span>
+            <span class="post-date" title="2021-03-01 21:42:40">2021/03/01</span>
+        </a>
+        
+        <a  class="All "
+           href="/2021/03/01/hello-world/"
+           data-tag=""
+           data-author="" >
+            <span class="post-title" title="Hello World">Hello World</span>
+            <span class="post-date" title="2021-03-01 21:42:40">2021/03/01</span>
+        </a>
+        
+        <a  class="All linux "
+           href="/2019/09/10/SSH%E5%85%8D%E5%AF%86%E7%99%BB%E5%BD%95%E5%8E%9F%E7%90%86/"
+           data-tag="linux"
+           data-author="" >
+            <span class="post-title" title="SSH免密登录原理">SSH免密登录原理</span>
+            <span class="post-date" title="2019-09-10 10:13:52">2019/09/10</span>
+        </a>
+        
+        <div id="no-item-tips">
+
+        </div>
+    </nav>
+    <div id="outline-list">
+    </div>
+</div>
+    </div>
+    <div class="hide-list">
+        <div class="semicircle" data-title="切换全屏 快捷键 s">
+            <div class="brackets first"><</div>
+            <div class="brackets">&gt;</div>
+        </div>
+    </div>
+</aside>
+<div id="post">
+    <div class="pjax">
+        <article id="post-SSH免密登录原理" class="article article-type-post" itemscope itemprop="blogPost">
+    
+        <h1 class="article-title">SSH免密登录原理</h1>
+    
+    <div class="article-meta">
+        
+        
+        
+        <span class="book">
+            <i class="iconfont icon-category"></i>
+            
+            <a  data-rel="linux">linux</a>
+            
+        </span>
+        
+        
+        <span class="tag">
+            <i class="iconfont icon-tag"></i>
+            
+            <a class="color1">linux</a>
+            
+        </span>
+        
+    </div>
+    <div class="article-meta">
+        
+            Created At : <time class="date" title='Updated At: 2021-03-01 21:42:40'>2019-09-10 10:13</time>
+        
+    </div>
+    <div class="article-meta">
+        
+        
+        <span id="busuanzi_container_page_pv">
+            Views 👀 :<span id="busuanzi_value_page_pv">
+                <span class="count-comment">
+                    <span class="spinner">
+                      <div class="cube1"></div>
+                      <div class="cube2"></div>
+                    </span>
+                </span>
+            </span>
+        </span>
+        
+        
+    </div>
+    
+    <div class="toc-ref">
+    
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#SSH免密登录原理"><span class="toc-text">SSH免密登录原理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#SSH免密登陆配置图示"><span class="toc-text">SSH免密登陆配置图示</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#SSH免密登录原理图示"><span class="toc-text">SSH免密登录原理图示</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#具体配置操作"><span class="toc-text">具体配置操作</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#环境准备"><span class="toc-text">环境准备</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#配置"><span class="toc-text">配置</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#可能的问题"><span class="toc-text">可能的问题</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#权限问题"><span class="toc-text">权限问题</span></a></li></ol></li></ol>
+    
+<style>
+    .left-col .switch-btn,
+    .left-col .switch-area {
+        display: none;
+    }
+    .toc-level-3 i,
+    .toc-level-3 ol {
+        display: none !important;
+    }
+</style>
+</div>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="SSH免密登录原理"><a href="#SSH免密登录原理" class="headerlink" title="SSH免密登录原理"></a>SSH免密登录原理</h2><h3 id="SSH免密登陆配置图示"><a href="#SSH免密登陆配置图示" class="headerlink" title="SSH免密登陆配置图示"></a>SSH免密登陆配置图示</h3><p><img src="http://img.zhoubg.cn/SSH%E5%85%8D%E5%AF%86%E7%99%BB%E5%BD%95%E9%85%8D%E7%BD%AE.jpg" alt="SSH免密登陆配置"></p>
+<h3 id="SSH免密登录原理图示"><a href="#SSH免密登录原理图示" class="headerlink" title="SSH免密登录原理图示"></a>SSH免密登录原理图示</h3><p><img src="http://img.zhoubg.cn/SSH%E5%85%8D%E5%AF%86%E7%99%BB%E5%BD%95%E5%8E%9F%E7%90%86.jpg" alt="SSH免密登录原理"></p>
+<h2 id="具体配置操作"><a href="#具体配置操作" class="headerlink" title="具体配置操作"></a>具体配置操作</h2><h3 id="环境准备"><a href="#环境准备" class="headerlink" title="环境准备"></a>环境准备</h3><ol>
+<li>操作系统：centos 6.4</li>
+<li>serverA：  192.168.100.129</li>
+<li>serverB：  192.168.100.130</li>
+</ol>
+<h3 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h3><p>没做任何配置前从serverA上SSH登录到serverB时需要输入密码的（如果是第一次登录，输入密码前还会询问授权yes/no，只管输入yes就行）：</p>
+<pre><code class="bash">[binxin@serverA ~]$ ssh binxin@serverB
+binxin@serverb&#39;s password: 
+Last login: Fri Apr  1 00:35:41 2016 from servera
+[binxin@serverB ~]$ </code></pre>
+<p>下面开始免密登陆的配置：</p>
+<ul>
+<li>在serveA上生成秘钥对：</li>
+</ul>
+<pre><code class="bash">[binxin@serverA ~]$ ssh-keygen -t rsa
+Generating public/private rsa key pair.
+Enter file in which to save the key (/home/binxin/.ssh/id_rsa): 
+Enter passphrase (empty for no passphrase): 
+Enter same passphrase again: 
+Your identification has been saved in /home/binxin/.ssh/id_rsa.
+Your public key has been saved in /home/binxin/.ssh/id_rsa.pub.
+The key fingerprint is:
+f2:f1:00:ca:b0:d0:3c:52:ac:9b:b7:0d:7e:62:f3:39 binxin@serverA
+The key&#39;s randomart image is:
++--[ RSA 2048]----+
+| ..              |
+| +.              |
+|o.=   .          |
+|.o = . .         |
+| o. o . S        |
+|o o    o +       |
+| o +    . .      |
+|  * E.           |
+| . =o.           |
++-----------------+
+[binxin@serverA ~]$ </code></pre>
+<p>查看用户目录下的ssh（隐藏的）文件夹，秘钥对已经生成，公钥id_rsa.pub，私钥id_rsa</p>
+<pre><code class="bash">[binxin@serverA ~]$ cd .ssh/
+[binxin@serverA .ssh]$ ls
+id_rsa  id_rsa.pub  known_hosts
+[binxin@serverA .ssh]$ </code></pre>
+<ul>
+<li>通过scp命令复制serverA的公钥到serverB上</li>
+</ul>
+<pre><code class="bash">[binxin@serverA .ssh]$ scp ~/.ssh/id_rsa.pub binxin@serverB:/home/binxin/id_rsa.pub
+binxin@serverb&#39;s password: 
+id_rsa.pub                                           100%  396     0.4KB/s   00:00    
+[binxin@serverA .ssh]$</code></pre>
+<ul>
+<li>登录serverB，将上步靠过来的公钥添加到授权列表文件authorized_keys中，刚开始没有这个文件，追加的时候自动生成了</li>
+</ul>
+<pre><code class="bash">[binxin@serverB ~]$ cd .ssh/
+[binxin@serverB .ssh]$ ls
+[binxin@serverB .ssh]$ cat ~/id_rsa.pub &gt;&gt; ~/.ssh/authorized_keys
+[binxin@serverB .ssh]$ ls
+authorized_keys
+[binxin@serverB .ssh]$</code></pre>
+<ul>
+<li>authorized_keys文件的权限必须为600，ssh目录权限必须为700，手动修改权限</li>
+</ul>
+<pre><code class="bash">[binxin@serverB ~]$ chmod 700 ~/.ssh 
+[binxin@serverB ~]$ chmod 600 ~/.ssh/authorized_keys </code></pre>
+<ul>
+<li>检验配置是否成功，从serverA通过ssh登陆到serverB，发现不用输密码直接登陆成功了，搞定！</li>
+</ul>
+<pre><code class="bash">[binxin@serverA .ssh]$ ssh binxin@serverB
+Last login: Fri Apr  1 00:46:54 2016 from servera
+[binxin@serverB ~]$</code></pre>
+<h2 id="可能的问题"><a href="#可能的问题" class="headerlink" title="可能的问题"></a>可能的问题</h2><h3 id="权限问题"><a href="#权限问题" class="headerlink" title="权限问题"></a>权限问题</h3><p>配置完authorized_keys一直不生效，很可能是因为.ssh目录和下面文件的权限问题导致的，因为目录的权限已经超过了sshd的要求权限。如果希望ssh公钥生效需满足至少下面两个条件：.ssh目录的权限必须是700，.ssh/authorized_keys文件权限必须是600</p>
+
+      
+       <hr><span style="font-style: italic;color: gray;"> 转载请注明来源，欢迎对文章中的引用来源进行考证，欢迎指出任何有错误或不够清晰的表达。可以在下面评论区评论，也可以邮件至 992132705@qq.com </span>
+    </div>
+</article>
+
+
+
+
+
+
+
+    
+
+
+
+
+    </div>
+    <div class="copyright">
+        <p class="footer-entry"><span class="miit">
+                <img src="/img/gov.png" title="中华人民共和国工业和信息化部">
+                <a href="http://beian.miit.gov.cn/" target="_blank" rel="noopener">粤ICP备18064823号</a>
+        </span>
+    
+    ©2016-2020 binxin
+</p>
+<p class="footer-entry">Built with <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/yelog/hexo-theme-3-hexo" target="_blank">3-hexo</a> theme</p>
+
+    </div>
+    <div class="full-toc">
+        <button class="full" data-title="切换全屏 快捷键 s"><span class="min "></span></button>
+<a class="" id="rocket" ></a>
+
+    </div>
+</div>
+
+</body>
+<script src="/js/jquery.pjax.js?v=1.1.0" ></script>
+
+<script src="/js/script.js?v=1.1.0" ></script>
+<script>
+    var img_resize = 'default';
+    function initArticle() {
+        /*渲染对应的表格样式*/
+        
+            $("#post .pjax table").addClass("green_title");
+        
+
+        /*渲染打赏样式*/
+        
+
+        /*高亮代码块行号*/
+        
+
+        /*访问数量*/
+        
+        $.getScript("//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js");
+        
+
+        /*代码高亮，行号对齐*/
+        $('.pre-numbering').css('line-height',$('.has-numbering').css('line-height'));
+
+        
+        
+    }
+
+    /*打赏页面隐藏与展示*/
+    
+
+</script>
+
+<!--加入行号的高亮代码块样式-->
+
+<!--自定义样式设置-->
+<style>
+    
+    
+    .nav {
+        width: 542px;
+    }
+    .nav.fullscreen {
+        margin-left: -542px;
+    }
+    .nav-left {
+        width: 120px;
+    }
+    
+    
+    @media screen and (max-width: 1468px) {
+        .nav {
+            width: 492px;
+        }
+        .nav.fullscreen {
+            margin-left: -492px;
+        }
+        .nav-left {
+            width: 100px;
+        }
+    }
+    
+    
+    @media screen and (max-width: 1024px) {
+        .nav {
+            width: 492px;
+            margin-left: -492px
+        }
+        .nav.fullscreen {
+            margin-left: 0;
+        }
+    }
+    
+    @media screen and (max-width: 426px) {
+        .nav {
+            width: 100%;
+        }
+        .nav-left {
+            width: 100%;
+        }
+    }
+    
+    
+    .nav-right .title-list nav a .post-title, .nav-right .title-list #local-search-result a .post-title {
+        color: #383636;
+    }
+    
+    
+    .nav-right .title-list nav a .post-date, .nav-right .title-list #local-search-result a .post-date {
+        color: #5e5e5f;
+    }
+    
+    
+    .nav-right nav a.hover, #local-search-result a.hover{
+        background-color: #e2e0e0;
+    }
+    
+    
+
+    /*列表样式*/
+    
+
+    /* 背景图样式 */
+    
+    
+
+
+    /*引用块样式*/
+    
+
+    /*文章列表背景图*/
+    
+
+    
+</style>
+
+
+
+
+
+
+
+</html>

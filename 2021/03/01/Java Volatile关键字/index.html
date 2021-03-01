@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Java Volatile 关键字 | Hexo</title>
+  <meta name="keywords" content=" Java并发 ">
+  <meta name="description" content="Java Volatile 关键字 | Hexo">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="description" content="作者：leapMia 原文连接：https:&#x2F;&#x2F;blog.leapmie.com&#x2F;archives&#x2F;418  1. HTTPS随着 HTTPS 建站的成本下降，现在大部分的网站都已经开始用上 HTTPS 协议。大家都知道 HTTPS 比 HTTP 安全，也听说过与 HTTPS 协议相关的概念有 SSL 、非对称加密、 CA证书等，但对于以下灵魂三拷问可能就答不上了：  为什么用了 HTTPS 就">
+<meta property="og:type" content="article">
+<meta property="og:title" content="HTTPS原理分析">
+<meta property="og:url" content="http://yoursite.com/2021/03/01/HTTPS%20%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="作者：leapMia 原文连接：https:&#x2F;&#x2F;blog.leapmie.com&#x2F;archives&#x2F;418  1. HTTPS随着 HTTPS 建站的成本下降，现在大部分的网站都已经开始用上 HTTPS 协议。大家都知道 HTTPS 比 HTTP 安全，也听说过与 HTTPS 协议相关的概念有 SSL 、非对称加密、 CA证书等，但对于以下灵魂三拷问可能就答不上了：  为什么用了 HTTPS 就">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://img.zhoubg.cn/static/1378987910.png">
+<meta property="og:image" content="http://img.zhoubg.cn/static/2410496311.png">
+<meta property="og:image" content="http://img.zhoubg.cn/static/1148530856.png">
+<meta property="og:image" content="http://img.zhoubg.cn/static/1504265182.png">
+<meta property="og:image" content="http://img.zhoubg.cn/static/3247911170.jpg">
+<meta property="article:published_time" content="2021-03-01T21:42:40.997Z">
+<meta property="article:modified_time" content="2021-03-01T21:42:40.997Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="web">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://img.zhoubg.cn/static/1378987910.png">
+
+
+<link rel="icon" href="/img/avatar.jpg">
+
+<link href="/css/style.css?v=1.1.0" rel="stylesheet">
+
+<link href="/css/hl_theme/atom-light.css?v=1.1.0" rel="stylesheet">
+
+<link href="//cdn.jsdelivr.net/npm/animate.css@4.1.0/animate.min.css" rel="stylesheet">
+
+<script src="//cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+<script src="/js/titleTip.js?v=1.1.0" ></script>
+
+<script src="//cdn.jsdelivr.net/npm/highlightjs@9.16.2/highlight.pack.min.js"></script>
+<script>
+    hljs.initHighlightingOnLoad();
+</script>
+
+<script src="//cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.js"></script>
+
+
+
+<script src="//cdn.jsdelivr.net/npm/jquery.cookie@1.4.1/jquery.cookie.min.js" ></script>
+
+<script src="/js/iconfont.js?v=1.1.0" ></script>
+
+<meta name="generator" content="Hexo 4.2.1"></head>
+<div style="display: none">
+  <input class="theme_disqus_on" value="false">
+  <input class="theme_preload_comment" value="">
+  <input class="theme_blog_path" value="">
+  <input id="theme_shortcut" value="true" />
+</div>
+
+
+<body>
+<aside class="nav">
+    <div class="nav-left">
+        <a href="/" class="avatar_target">
+    <img class="avatar" src="/img/avatar.jpg" />
+</a>
+<div class="author">
+    <span>John Doe</span>
+</div>
+
+<div class="icon">
+    
+        
+        <a title="rss" href="/atom.xml" target="_blank">
+            
+                <svg class="iconfont-svg" aria-hidden="true">
+                    <use xlink:href="#icon-rss"></use>
+                </svg>
+            
+        </a>
+        
+    
+        
+        <a title="github" href="https://github.com/yelog" target="_blank">
+            
+                <svg class="iconfont-svg" aria-hidden="true">
+                    <use xlink:href="#icon-github"></use>
+                </svg>
+            
+        </a>
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+        <a title="oschina" href="https://my.oschina.net/yelog" target="_blank">
+            
+                <svg class="iconfont-svg" aria-hidden="true">
+                    <use xlink:href="#icon-oschina"></use>
+                </svg>
+            
+        </a>
+        
+    
+        
+    
+        
+        <a title="email" href="mailto:992132705@qq.com" target="_blank">
+            
+                <svg class="iconfont-svg" aria-hidden="true">
+                    <use xlink:href="#icon-email"></use>
+                </svg>
+            
+        </a>
+        
+    
+        
+        <a title="qq" href="http://wpa.qq.com/msgrd?v=3&uin=992132705&site=qq&menu=yes" target="_blank">
+            
+                <svg class="iconfont-svg" aria-hidden="true">
+                    <use xlink:href="#icon-qq"></use>
+                </svg>
+            
+        </a>
+        
+    
+        
+    
+        
+    
+</div>
+
+
+
+
+<ul>
+    <li><div class="all active" data-rel="All">All<small>(7)</small></div></li>
+    
+        
+            
+            <li><div data-rel="Java并发">Java并发<small>(3)</small></div>
+                
+            </li>
+            
+        
+    
+        
+            
+            <li><div data-rel="linux">linux<small>(1)</small></div>
+                
+            </li>
+            
+        
+    
+        
+            
+            <li><div data-rel="web">web<small>(1)</small></div>
+                
+            </li>
+            
+        
+    
+</ul>
+<div class="left-bottom">
+    <div class="menus">
+    
+    
+    
+    
+    </div>
+    <div></div>
+</div>
+<input type="hidden" id="yelog_site_posts_number" value="7">
+
+<div style="display: none">
+    <span id="busuanzi_value_site_uv"></span>
+    <span id="busuanzi_value_site_pv"></span>
+</div>
+
+    </div>
+    <div class="nav-right">
+        <div class="friends-area">
+    <div class="friends-title">
+        Links
+        <i class="iconfont icon-left"></i>
+    </div>
+    <div class="friends-content">
+        <ul>
+            
+            <li><a target="_blank" href="http://yelog.org/">叶落阁</a></li>
+            
+        </ul>
+    </div>
+</div>
+        <div class="title-list">
+    <div class="right-top">
+        <div id="default-panel">
+            <i class="iconfont icon-search" data-title="搜索 快捷键 i"></i>
+            <div class="right-title">All</div>
+            <i class="iconfont icon-file-tree" data-title="切换到大纲视图 快捷键 w"></i>
+        </div>
+        <div id="search-panel">
+            <i class="iconfont icon-left" data-title="返回"></i>
+            <input id="local-search-input" />
+            <label class="border-line" for="input"></label>
+            <i class="iconfont icon-case-sensitive" data-title="大小写敏感"></i>
+            <i class="iconfont icon-tag" data-title="标签"></i>
+        </div>
+        <div id="outline-panel" style="display: none">
+            <div class="right-title">大纲</div>
+            <i class="iconfont icon-list" data-title="切换到文章列表"></i>
+        </div>
+    </div>
+
+    <div class="tags-list">
+    <input id="tag-search" />
+    <div class="tag-wrapper">
+        
+            <li class="article-tag-list-item">
+                <i class="iconfont icon-tag"></i><a>Java并发</a>
+            </li>
+        
+            <li class="article-tag-list-item">
+                <i class="iconfont icon-tag"></i><a>linux</a>
+            </li>
+        
+            <li class="article-tag-list-item">
+                <i class="iconfont icon-tag"></i><a>web</a>
+            </li>
+        
+    </div>
+
+</div>
+
+    
+    <nav id="title-list-nav">
+        
+        <a  class="All web "
+           href="/2021/03/01/HTTPS%20%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90/"
+           data-tag="web"
+           data-author="" >
+            <span class="post-title" title="HTTPS原理分析">HTTPS原理分析</span>
+            <span class="post-date" title="2021-03-01 21:42:40">2021/03/01</span>
+        </a>
+        
+        <a  class="All "
+           href="/2021/03/01/JVM%E7%AC%94%E8%AE%B0/"
+           data-tag=""
+           data-author="" >
+            <span class="post-title" title="JVM笔记">JVM笔记</span>
+            <span class="post-date" title="2021-03-01 21:42:40">2021/03/01</span>
+        </a>
+        
+        <a  class="All Java并发 "
+           href="/2021/03/01/Java%20Volatile%E5%85%B3%E9%94%AE%E5%AD%97/"
+           data-tag="Java并发"
+           data-author="" >
+            <span class="post-title" title="Java Volatile 关键字">Java Volatile 关键字</span>
+            <span class="post-date" title="2021-03-01 21:42:40">2021/03/01</span>
+        </a>
+        
+        <a  class="All Java并发 "
+           href="/2021/03/01/Java%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%EF%BC%88JMM%EF%BC%89/"
+           data-tag="Java并发"
+           data-author="" >
+            <span class="post-title" title="Java内存模型（JMM）">Java内存模型（JMM）</span>
+            <span class="post-date" title="2021-03-01 21:42:40">2021/03/01</span>
+        </a>
+        
+        <a  class="All Java并发 "
+           href="/2021/03/01/Java%E5%90%8C%E6%AD%A5%E5%9D%97/"
+           data-tag="Java并发"
+           data-author="" >
+            <span class="post-title" title="Java同步块">Java同步块</span>
+            <span class="post-date" title="2021-03-01 21:42:40">2021/03/01</span>
+        </a>
+        
+        <a  class="All "
+           href="/2021/03/01/hello-world/"
+           data-tag=""
+           data-author="" >
+            <span class="post-title" title="Hello World">Hello World</span>
+            <span class="post-date" title="2021-03-01 21:42:40">2021/03/01</span>
+        </a>
+        
+        <a  class="All linux "
+           href="/2019/09/10/SSH%E5%85%8D%E5%AF%86%E7%99%BB%E5%BD%95%E5%8E%9F%E7%90%86/"
+           data-tag="linux"
+           data-author="" >
+            <span class="post-title" title="SSH免密登录原理">SSH免密登录原理</span>
+            <span class="post-date" title="2019-09-10 10:13:52">2019/09/10</span>
+        </a>
+        
+        <div id="no-item-tips">
+
+        </div>
+    </nav>
+    <div id="outline-list">
+    </div>
+</div>
+    </div>
+    <div class="hide-list">
+        <div class="semicircle" data-title="切换全屏 快捷键 s">
+            <div class="brackets first"><</div>
+            <div class="brackets">&gt;</div>
+        </div>
+    </div>
+</aside>
+<div id="post">
+    <div class="pjax">
+        <article id="post-Java Volatile关键字" class="article article-type-post" itemscope itemprop="blogPost">
+    
+        <h1 class="article-title">Java Volatile 关键字</h1>
+    
+    <div class="article-meta">
+        
+        
+        
+        <span class="book">
+            <i class="iconfont icon-category"></i>
+            
+            <a  data-rel="Java并发">Java并发</a>
+            
+        </span>
+        
+        
+        <span class="tag">
+            <i class="iconfont icon-tag"></i>
+            
+            <a class="color2">Java并发</a>
+            
+        </span>
+        
+    </div>
+    <div class="article-meta">
+        
+            Created At : <time class="date" title='Updated At: 2021-03-01 21:42:40'>2021-03-01 21:42</time>
+        
+    </div>
+    <div class="article-meta">
+        
+        
+        <span id="busuanzi_container_page_pv">
+            Views 👀 :<span id="busuanzi_value_page_pv">
+                <span class="count-comment">
+                    <span class="spinner">
+                      <div class="cube1"></div>
+                      <div class="cube2"></div>
+                    </span>
+                </span>
+            </span>
+        </span>
+        
+        
+    </div>
+    
+    <div class="toc-ref">
+    
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#变量的可见性问题"><span class="toc-text">变量的可见性问题</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#volatile的可见性保证"><span class="toc-text">volatile的可见性保证</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#完整的volatile可见性保证"><span class="toc-text">完整的volatile可见性保证</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#指令重排的难题"><span class="toc-text">指令重排的难题</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Happen-Before原则"><span class="toc-text">Happen-Before原则</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#挥发性并不总是足够的"><span class="toc-text">挥发性并不总是足够的</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#什么时候挥发足够？"><span class="toc-text">什么时候挥发足够？</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#volatile的性能考虑"><span class="toc-text">volatile的性能考虑</span></a></li></ol>
+    
+<style>
+    .left-col .switch-btn,
+    .left-col .switch-area {
+        display: none;
+    }
+    .toc-level-3 i,
+    .toc-level-3 ol {
+        display: none !important;
+    }
+</style>
+</div>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Java中 <strong><code>volatile</code></strong>关键字用于将Java变量标记为“<strong>将存储在主存储器中</strong>”。更准确地说，这意味着将对<strong><code>volatile</code></strong>变量的每次读取都将从计算机的主内存中读取，而不是从CPU缓存中读取，并且对<strong><code>volatile</code></strong>变量的每次写入都将写入主存储器中，而不仅是CPU高速缓存中。</p>
+<p>实际上，从Java 5开始，<strong><code>volatile</code></strong>关键字不仅仅保证将<strong><code>volatile</code></strong>变量写入主存储器或从主存储器读取。我将在以下各节中进行解释。</p>
+<h1 id="变量的可见性问题"><a href="#变量的可见性问题" class="headerlink" title="变量的可见性问题"></a>变量的可见性问题</h1><p><code>volatile</code>关键字可确保跨线程更改变量的可见性。这听起来有点抽象，所以让我详细说明。</p>
+<p>在多线程应用程序中，线程对<code>non-volatile</code>变量进行操作，出于性能方面的考虑，每个线程在对其进行操作时都可以将变量从主内存复制到CPU缓存中。如果您的计算机包含多个CPU，则每个线程可能在不同的CPU上运行。这意味着，每个线程可以将变量复制到不同CPU的CPU缓存中。这在这里说明：</p>
+<p><img src="http://img.zhoubg.cn/static/20200530153630.png" alt="Threads may hold copies of variables from main memory in CPU caches."></p>
+<p>对于<code>non-volatile</code>变量，无法保证Java虚拟机何时将数据从主存储器读取到CPU缓存中，或何时将数据从CPU缓存写入到主存储器中。 这可能会导致一些问题，我将在以下各节中进行解释。</p>
+<p>设想一种情况，两个或多个线程可以访问一个共享对象，该共享对象中声明了一个计数器变量<code>counter</code>：</p>
+<pre><code class="java">public class SharedObject {
+
+    public int counter = 0;
+
+}</code></pre>
+<p>想象一下，只有线程1会递增<code>counter</code>变量，但是线程1和线程2都可能会不时的读取<code>counter</code>变量。</p>
+<p>如果<code>counter</code>变量未声明为volatile，则无法保证何时将<code>counter</code>变量的值从CPU高速缓存写回主存储器。 这意味着，CPU缓存中的<code>counter</code>变量值可能与主存储器中的不同。 此处说明了这种情况：</p>
+<p><img src="http://img.zhoubg.cn/static/java-volatile-2.png" alt=""></p>
+<p>由于该变量尚未被另一个线程写回到主内存中而导致线程看不到到变量最新值的问题，被称为<strong>“可见性”</strong>问题。 一个线程的更新对其他线程不可见。</p>
+<h1 id="volatile的可见性保证"><a href="#volatile的可见性保证" class="headerlink" title="volatile的可见性保证"></a><code>volatile</code>的可见性保证</h1><p>Java中 <code>volatile</code>关键字旨在解决变量可见性问题。 通过声明<code>counter</code>变量为<code>volatile</code>，所有对<code>counter</code>变量的写操作将立即写回到主存储器； 同样，对<code>counter</code>变量的所有读取将直接从主存储器读取。</p>
+<p>变量的声明只需要在前面加上<code>volatile</code>关键字：</p>
+<pre><code class="java">public class SharedObject {
+
+    public volatile int counter = 0;
+
+}</code></pre>
+<p>这样将变量声明为<code>volatile</code>就可以保证一个线程对变量写入时对其他线程可见。</p>
+<p>在上面给出的方案中，一个线程（T1）修改了<code>counter</code>，而另一个线程（T2）读取了<code>counter</code>（但从未修改过），只要将<code>counter</code>变量声明为<code>volatile</code>就足以保证T2对写入<code>counter</code>变量的可见性。</p>
+<p>但是，如果T1和T2都在增加<code>counter</code>变量，那么仅声明计数器变量为<code>volatil</code>e是不够的，这后面再说。</p>
+<h1 id="完整的volatile可见性保证"><a href="#完整的volatile可见性保证" class="headerlink" title="完整的volatile可见性保证"></a>完整的<code>volatile</code>可见性保证</h1><p>实际上，Java <code>volatile</code>的可见性保证超出了<code>volatile</code>变量本身。其他可见性保证如下：</p>
+<ul>
+<li>如果线程A写入<code>volatile</code>变量，并且线程B随后读取相同的<code>volatile</code>变量，则在写入<code>volatile</code>变量之前线程A可见的所有变量在读取<code>volatile</code>变量后也将对线程B可见。</li>
+<li>如果线程A读取了<code>volatile</code>变量，则在读取<code>volatile</code>变量时线程A可见的所有所有变量也将从主内存中重新读取。</li>
+</ul>
+<p>让我用一个代码示例来说明这一点：</p>
+<pre><code class="java">public class MyClass {
+    private int years;
+    private int months
+    private volatile int days;
+
+    public void update(int years, int months, int days){
+        this.years  = years;
+        this.months = months;
+        this.days   = days;
+    }
+}</code></pre>
+<p><code>udpate（）</code>方法写入了三个变量，其中只有<code>days</code>是声明了<code>volatile</code>的。</p>
+<p>完整的<code>volatile</code>的可见性保证意味着，当将一个值写入<code>days</code>时，线程可见的所有变量也将写入主内存， 这意味着，当将值写入<code>days</code>时，<code>years</code>和<code>months</code>的值也将写入主存储器。</p>
+<p>在读取<code>years</code>，<code>months</code>和<code>days</code>的值时，您可以这样：</p>
+<pre><code class="java">public class MyClass {
+    private int years;
+    private int months
+    private volatile int days;
+
+    public int totalDays() {
+        int total = this.days;
+        total += months * 30;
+        total += years * 365;
+        return total;
+    }
+
+    public void update(int years, int months, int days){
+        this.years  = years;
+        this.months = months;
+        this.days   = days;
+    }
+}</code></pre>
+<p>请注意，<code>totalDays（）</code>方法将首先把<code>days</code>的值读入<code>total</code>变量， 当读取<code>days</code>的值时，<code>months</code>和<code>years</code>的值也被读入主存储器。 因此，可以保证按照上述读取顺序查看<code>days</code>，<code>months</code>和<code>years</code>的最新值。</p>
+<h1 id="指令重排的难题"><a href="#指令重排的难题" class="headerlink" title="指令重排的难题"></a>指令重排的难题</h1><p>出于性能原因，允许Java 虚拟机和CPU对程序中的指令进行重新排序，只要指令的语义含义保持不变即可。 例如以下代码：</p>
+<pre><code class="java">int a = 1;
+int b = 2;
+
+a++;
+b++;</code></pre>
+<p>这些指令可以重新排序为以下顺序，而不会丢失程序的语义：</p>
+<pre><code class="java">int a = 1;
+a++;
+
+int b = 2;
+b++;</code></pre>
+<p>然而，当变量之一是<code>volatile</code>变量时，指令重排就会产生些问题了。 让我们看一下前面的示例中的<code>MyClass</code>类：</p>
+<pre><code class="java">public class MyClass {
+    private int years;
+    private int months
+    private volatile int days;
+
+    public void update(int years, int months, int days){
+        this.years  = years;
+        this.months = months;
+        this.days   = days;
+    }
+}</code></pre>
+<p>一旦<code>update（）</code>方法将值写入<code>days</code>，则对<code>years</code>和<code>months</code>新写入的值也写入主内存。 但是，如果Java虚拟机对指令进行重排，例如： </p>
+<pre><code class="java">public void update(int years, int months, int days){
+    this.days   = days;
+    this.months = months;
+    this.years  = years;
+}</code></pre>
+<p>当修改<code>days</code>变量时，<code>months</code>和<code>years</code>的值仍会写入主存储器，但是这一次写入主存储器的值是在将新值写入<code>months</code>和<code>years</code>之前的那个值， 因此，新值无法被其他线程看到（不可见）。这种情况重新排序的指令的语义已经发生更改了。</p>
+<p>当然Java有解决此问题的方法，我们将在下一节中看到。</p>
+<h1 id="Happen-Before原则"><a href="#Happen-Before原则" class="headerlink" title="Happen-Before原则"></a><code>Happen-Before</code>原则</h1><p>为了解决指令重新排序的难题，除了可见性保证之外，<code>volatile</code>关键字还提供了“<code>Happen-Before</code>”保证：</p>
+<ul>
+<li>如果对易变变量的写操作最初发生在对<code>volatile</code>变量的写操作之前，则对其他变量的读和写操作不能在写<code>volatile</code>变量后重新排序。<br>确保在对<code>volatile</code>变量进行写之前进行的读/写操作在“对<code>volatile</code>变量进行写之前”发生。请注意，例如读/写位于对volatile的写入之后的其他变量，以重新排序发生在对该<code>volatile</code>的写入之前。并非相反。从后到前是允许的，但从前到后是不允许的。</li>
+<li>如果读取/写入最初发生在读取<code>volatile</code>变量之后，则对其他变量的读取和写入不能重新排列为在读取<code>volatile</code>变量之前发生。请注意，可能会在读取<code>volatile</code>变量之后重新排列读取<code>volatile</code>变量之前发生的其他变量。并非相反。允许从之前到之后，但不允许从之后到之前。<br>上述“先发生后保证”确保强制执行<code>volatile</code>关键字的可见性保证。</li>
+</ul>
+<h1 id="挥发性并不总是足够的"><a href="#挥发性并不总是足够的" class="headerlink" title="挥发性并不总是足够的"></a>挥发性并不总是足够的</h1><p>即使volatile关键字保证直接从主存储器读取所有volatile变量的读操作，并且将对volatile变量的所有写操作直接写到主存储器，在某些情况下，仍不足以声明volatile变量。</p>
+<p>在前面说明的情况下，只有线程1写入共享计数器变量，声明计数器变量volatile足以确保线程2始终看到最新的写入值。</p>
+<p>实际上，如果写入变量的新值不依赖于先前的值，则多个线程甚至可能正在写入一个共享的volatile变量，并且仍将正确的值存储在主存储器中。换句话说，如果线程首先将值写入共享的volatile变量，则不需要先读取其值即可找出下一个值。</p>
+<p>一旦线程需要首先读取volatile变量的值，并基于该值为共享的volatile变量生成新值，则volatile变量将不再足以保证正确的可见性。读取volatile变量与写入新值之间的时间间隔很短，这造成了竞争状态，其中多个线程可能会读取volatile变量的相同值，为该变量生成一个新值，以及在写入值时返回主内存-覆盖彼此的值。</p>
+<p>多个线程递增同一计数器的情况恰好是volatile变量不足的情况。以下各节将更详细地说明这种情况。</p>
+<p>想象一下，如果线程1将一个值为0的共享计数器变量读入其CPU高速缓存中，将其递增为1，而不将更改后的值写回到主存储器中。然后，线程2可以从主存储器（该变量的值仍为0）读取相同的计数器变量到其自己的CPU高速缓存中。然后线程2还可将计数器增加到1，也不会将其写回到主存储器。下图说明了这种情况：</p>
+<p><img src="http://tutorials.jenkov.com/images/java-concurrency/java-volatile-3.png" alt="Two threads have read a shared counter variable into their local CPU caches and incremented it."></p>
+<p>现在，线程1和线程2实际上不同步。 共享计数器变量的实际值应该为2，但是每个线程在其CPU高速缓存中的变量值均为1，而在主内存中该值仍为0。真是一团糟！ 即使线程最终将共享计数器变量的值写回到主内存，该值也将是错误的。</p>
+<h1 id="什么时候挥发足够？"><a href="#什么时候挥发足够？" class="headerlink" title="什么时候挥发足够？"></a>什么时候挥发足够？</h1><p>如前所述，如果两个线程都在读取和写入共享变量，那么仅使用volatile关键字是不够的。在这种情况下，您需要使用同步来保证变量的读写是原子的。读取或写入volatile变量不会阻止线程读取或写入。为此，您必须在关键部分周围使用synced关键字。</p>
+<p>作为同步块的替代方法，您还可以使用java.util.concurrent包中提供的许多原子数据类型之一。例如，AtomicLong或AtomicReference或其他之一。</p>
+<p>如果只有一个线程读取和写入易失变量的值，而其他线程仅读取该变量，则保证读取线程可以看到写入易失变量的最新值。如果不使变量可变，则将无法保证。</p>
+<p>volatile关键字保证可以在32位和64个变量上使用。</p>
+<h1 id="volatile的性能考虑"><a href="#volatile的性能考虑" class="headerlink" title="volatile的性能考虑"></a><code>volatile</code>的性能考虑</h1><p>读取和写入<code>volatile</code>变量会使该变量被读取或写入主存储器。与访问CPU高速缓存相比，读写主存储器的开销更大。访问<code>volatile</code>变量还可以防止指令重新排序，这是正常的性能增强技术。因此，仅在确实需要增强变量的可见性时才应使用<code>volatile</code>变量。</p>
+
+      
+       <hr><span style="font-style: italic;color: gray;"> 转载请注明来源，欢迎对文章中的引用来源进行考证，欢迎指出任何有错误或不够清晰的表达。可以在下面评论区评论，也可以邮件至 992132705@qq.com </span>
+    </div>
+</article>
+
+
+
+
+
+
+
+    
+
+
+
+
+    </div>
+    <div class="copyright">
+        <p class="footer-entry"><span class="miit">
+                <img src="/img/gov.png" title="中华人民共和国工业和信息化部">
+                <a href="http://beian.miit.gov.cn/" target="_blank" rel="noopener">粤ICP备18064823号</a>
+        </span>
+    
+    ©2016-2020 binxin
+</p>
+<p class="footer-entry">Built with <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/yelog/hexo-theme-3-hexo" target="_blank">3-hexo</a> theme</p>
+
+    </div>
+    <div class="full-toc">
+        <button class="full" data-title="切换全屏 快捷键 s"><span class="min "></span></button>
+<a class="" id="rocket" ></a>
+
+    </div>
+</div>
+
+</body>
+<script src="/js/jquery.pjax.js?v=1.1.0" ></script>
+
+<script src="/js/script.js?v=1.1.0" ></script>
+<script>
+    var img_resize = 'default';
+    function initArticle() {
+        /*渲染对应的表格样式*/
+        
+            $("#post .pjax table").addClass("green_title");
+        
+
+        /*渲染打赏样式*/
+        
+
+        /*高亮代码块行号*/
+        
+
+        /*访问数量*/
+        
+        $.getScript("//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js");
+        
+
+        /*代码高亮，行号对齐*/
+        $('.pre-numbering').css('line-height',$('.has-numbering').css('line-height'));
+
+        
+        
+    }
+
+    /*打赏页面隐藏与展示*/
+    
+
+</script>
+
+<!--加入行号的高亮代码块样式-->
+
+<!--自定义样式设置-->
+<style>
+    
+    
+    .nav {
+        width: 542px;
+    }
+    .nav.fullscreen {
+        margin-left: -542px;
+    }
+    .nav-left {
+        width: 120px;
+    }
+    
+    
+    @media screen and (max-width: 1468px) {
+        .nav {
+            width: 492px;
+        }
+        .nav.fullscreen {
+            margin-left: -492px;
+        }
+        .nav-left {
+            width: 100px;
+        }
+    }
+    
+    
+    @media screen and (max-width: 1024px) {
+        .nav {
+            width: 492px;
+            margin-left: -492px
+        }
+        .nav.fullscreen {
+            margin-left: 0;
+        }
+    }
+    
+    @media screen and (max-width: 426px) {
+        .nav {
+            width: 100%;
+        }
+        .nav-left {
+            width: 100%;
+        }
+    }
+    
+    
+    .nav-right .title-list nav a .post-title, .nav-right .title-list #local-search-result a .post-title {
+        color: #383636;
+    }
+    
+    
+    .nav-right .title-list nav a .post-date, .nav-right .title-list #local-search-result a .post-date {
+        color: #5e5e5f;
+    }
+    
+    
+    .nav-right nav a.hover, #local-search-result a.hover{
+        background-color: #e2e0e0;
+    }
+    
+    
+
+    /*列表样式*/
+    
+
+    /* 背景图样式 */
+    
+    
+
+
+    /*引用块样式*/
+    
+
+    /*文章列表背景图*/
+    
+
+    
+</style>
+
+
+
+
+
+
+
+</html>

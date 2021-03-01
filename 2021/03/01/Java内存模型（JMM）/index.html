@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Java内存模型（JMM） | Hexo</title>
+  <meta name="keywords" content=" Java并发 ">
+  <meta name="description" content="Java内存模型（JMM） | Hexo">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="description" content="作者：leapMia 原文连接：https:&#x2F;&#x2F;blog.leapmie.com&#x2F;archives&#x2F;418  1. HTTPS随着 HTTPS 建站的成本下降，现在大部分的网站都已经开始用上 HTTPS 协议。大家都知道 HTTPS 比 HTTP 安全，也听说过与 HTTPS 协议相关的概念有 SSL 、非对称加密、 CA证书等，但对于以下灵魂三拷问可能就答不上了：  为什么用了 HTTPS 就">
+<meta property="og:type" content="article">
+<meta property="og:title" content="HTTPS原理分析">
+<meta property="og:url" content="http://yoursite.com/2021/03/01/HTTPS%20%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="作者：leapMia 原文连接：https:&#x2F;&#x2F;blog.leapmie.com&#x2F;archives&#x2F;418  1. HTTPS随着 HTTPS 建站的成本下降，现在大部分的网站都已经开始用上 HTTPS 协议。大家都知道 HTTPS 比 HTTP 安全，也听说过与 HTTPS 协议相关的概念有 SSL 、非对称加密、 CA证书等，但对于以下灵魂三拷问可能就答不上了：  为什么用了 HTTPS 就">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://img.zhoubg.cn/static/1378987910.png">
+<meta property="og:image" content="http://img.zhoubg.cn/static/2410496311.png">
+<meta property="og:image" content="http://img.zhoubg.cn/static/1148530856.png">
+<meta property="og:image" content="http://img.zhoubg.cn/static/1504265182.png">
+<meta property="og:image" content="http://img.zhoubg.cn/static/3247911170.jpg">
+<meta property="article:published_time" content="2021-03-01T21:42:40.997Z">
+<meta property="article:modified_time" content="2021-03-01T21:42:40.997Z">
+<meta property="article:author" content="John Doe">
+<meta property="article:tag" content="web">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://img.zhoubg.cn/static/1378987910.png">
+
+
+<link rel="icon" href="/img/avatar.jpg">
+
+<link href="/css/style.css?v=1.1.0" rel="stylesheet">
+
+<link href="/css/hl_theme/atom-light.css?v=1.1.0" rel="stylesheet">
+
+<link href="//cdn.jsdelivr.net/npm/animate.css@4.1.0/animate.min.css" rel="stylesheet">
+
+<script src="//cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+<script src="/js/titleTip.js?v=1.1.0" ></script>
+
+<script src="//cdn.jsdelivr.net/npm/highlightjs@9.16.2/highlight.pack.min.js"></script>
+<script>
+    hljs.initHighlightingOnLoad();
+</script>
+
+<script src="//cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.js"></script>
+
+
+
+<script src="//cdn.jsdelivr.net/npm/jquery.cookie@1.4.1/jquery.cookie.min.js" ></script>
+
+<script src="/js/iconfont.js?v=1.1.0" ></script>
+
+<meta name="generator" content="Hexo 4.2.1"></head>
+<div style="display: none">
+  <input class="theme_disqus_on" value="false">
+  <input class="theme_preload_comment" value="">
+  <input class="theme_blog_path" value="">
+  <input id="theme_shortcut" value="true" />
+</div>
+
+
+<body>
+<aside class="nav">
+    <div class="nav-left">
+        <a href="/" class="avatar_target">
+    <img class="avatar" src="/img/avatar.jpg" />
+</a>
+<div class="author">
+    <span>John Doe</span>
+</div>
+
+<div class="icon">
+    
+        
+        <a title="rss" href="/atom.xml" target="_blank">
+            
+                <svg class="iconfont-svg" aria-hidden="true">
+                    <use xlink:href="#icon-rss"></use>
+                </svg>
+            
+        </a>
+        
+    
+        
+        <a title="github" href="https://github.com/yelog" target="_blank">
+            
+                <svg class="iconfont-svg" aria-hidden="true">
+                    <use xlink:href="#icon-github"></use>
+                </svg>
+            
+        </a>
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+        <a title="oschina" href="https://my.oschina.net/yelog" target="_blank">
+            
+                <svg class="iconfont-svg" aria-hidden="true">
+                    <use xlink:href="#icon-oschina"></use>
+                </svg>
+            
+        </a>
+        
+    
+        
+    
+        
+        <a title="email" href="mailto:992132705@qq.com" target="_blank">
+            
+                <svg class="iconfont-svg" aria-hidden="true">
+                    <use xlink:href="#icon-email"></use>
+                </svg>
+            
+        </a>
+        
+    
+        
+        <a title="qq" href="http://wpa.qq.com/msgrd?v=3&uin=992132705&site=qq&menu=yes" target="_blank">
+            
+                <svg class="iconfont-svg" aria-hidden="true">
+                    <use xlink:href="#icon-qq"></use>
+                </svg>
+            
+        </a>
+        
+    
+        
+    
+        
+    
+</div>
+
+
+
+
+<ul>
+    <li><div class="all active" data-rel="All">All<small>(7)</small></div></li>
+    
+        
+            
+            <li><div data-rel="Java并发">Java并发<small>(3)</small></div>
+                
+            </li>
+            
+        
+    
+        
+            
+            <li><div data-rel="linux">linux<small>(1)</small></div>
+                
+            </li>
+            
+        
+    
+        
+            
+            <li><div data-rel="web">web<small>(1)</small></div>
+                
+            </li>
+            
+        
+    
+</ul>
+<div class="left-bottom">
+    <div class="menus">
+    
+    
+    
+    
+    </div>
+    <div></div>
+</div>
+<input type="hidden" id="yelog_site_posts_number" value="7">
+
+<div style="display: none">
+    <span id="busuanzi_value_site_uv"></span>
+    <span id="busuanzi_value_site_pv"></span>
+</div>
+
+    </div>
+    <div class="nav-right">
+        <div class="friends-area">
+    <div class="friends-title">
+        Links
+        <i class="iconfont icon-left"></i>
+    </div>
+    <div class="friends-content">
+        <ul>
+            
+            <li><a target="_blank" href="http://yelog.org/">叶落阁</a></li>
+            
+        </ul>
+    </div>
+</div>
+        <div class="title-list">
+    <div class="right-top">
+        <div id="default-panel">
+            <i class="iconfont icon-search" data-title="搜索 快捷键 i"></i>
+            <div class="right-title">All</div>
+            <i class="iconfont icon-file-tree" data-title="切换到大纲视图 快捷键 w"></i>
+        </div>
+        <div id="search-panel">
+            <i class="iconfont icon-left" data-title="返回"></i>
+            <input id="local-search-input" />
+            <label class="border-line" for="input"></label>
+            <i class="iconfont icon-case-sensitive" data-title="大小写敏感"></i>
+            <i class="iconfont icon-tag" data-title="标签"></i>
+        </div>
+        <div id="outline-panel" style="display: none">
+            <div class="right-title">大纲</div>
+            <i class="iconfont icon-list" data-title="切换到文章列表"></i>
+        </div>
+    </div>
+
+    <div class="tags-list">
+    <input id="tag-search" />
+    <div class="tag-wrapper">
+        
+            <li class="article-tag-list-item">
+                <i class="iconfont icon-tag"></i><a>Java并发</a>
+            </li>
+        
+            <li class="article-tag-list-item">
+                <i class="iconfont icon-tag"></i><a>linux</a>
+            </li>
+        
+            <li class="article-tag-list-item">
+                <i class="iconfont icon-tag"></i><a>web</a>
+            </li>
+        
+    </div>
+
+</div>
+
+    
+    <nav id="title-list-nav">
+        
+        <a  class="All web "
+           href="/2021/03/01/HTTPS%20%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90/"
+           data-tag="web"
+           data-author="" >
+            <span class="post-title" title="HTTPS原理分析">HTTPS原理分析</span>
+            <span class="post-date" title="2021-03-01 21:42:40">2021/03/01</span>
+        </a>
+        
+        <a  class="All "
+           href="/2021/03/01/JVM%E7%AC%94%E8%AE%B0/"
+           data-tag=""
+           data-author="" >
+            <span class="post-title" title="JVM笔记">JVM笔记</span>
+            <span class="post-date" title="2021-03-01 21:42:40">2021/03/01</span>
+        </a>
+        
+        <a  class="All Java并发 "
+           href="/2021/03/01/Java%20Volatile%E5%85%B3%E9%94%AE%E5%AD%97/"
+           data-tag="Java并发"
+           data-author="" >
+            <span class="post-title" title="Java Volatile 关键字">Java Volatile 关键字</span>
+            <span class="post-date" title="2021-03-01 21:42:40">2021/03/01</span>
+        </a>
+        
+        <a  class="All Java并发 "
+           href="/2021/03/01/Java%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%EF%BC%88JMM%EF%BC%89/"
+           data-tag="Java并发"
+           data-author="" >
+            <span class="post-title" title="Java内存模型（JMM）">Java内存模型（JMM）</span>
+            <span class="post-date" title="2021-03-01 21:42:40">2021/03/01</span>
+        </a>
+        
+        <a  class="All Java并发 "
+           href="/2021/03/01/Java%E5%90%8C%E6%AD%A5%E5%9D%97/"
+           data-tag="Java并发"
+           data-author="" >
+            <span class="post-title" title="Java同步块">Java同步块</span>
+            <span class="post-date" title="2021-03-01 21:42:40">2021/03/01</span>
+        </a>
+        
+        <a  class="All "
+           href="/2021/03/01/hello-world/"
+           data-tag=""
+           data-author="" >
+            <span class="post-title" title="Hello World">Hello World</span>
+            <span class="post-date" title="2021-03-01 21:42:40">2021/03/01</span>
+        </a>
+        
+        <a  class="All linux "
+           href="/2019/09/10/SSH%E5%85%8D%E5%AF%86%E7%99%BB%E5%BD%95%E5%8E%9F%E7%90%86/"
+           data-tag="linux"
+           data-author="" >
+            <span class="post-title" title="SSH免密登录原理">SSH免密登录原理</span>
+            <span class="post-date" title="2019-09-10 10:13:52">2019/09/10</span>
+        </a>
+        
+        <div id="no-item-tips">
+
+        </div>
+    </nav>
+    <div id="outline-list">
+    </div>
+</div>
+    </div>
+    <div class="hide-list">
+        <div class="semicircle" data-title="切换全屏 快捷键 s">
+            <div class="brackets first"><</div>
+            <div class="brackets">&gt;</div>
+        </div>
+    </div>
+</aside>
+<div id="post">
+    <div class="pjax">
+        <article id="post-Java内存模型（JMM）" class="article article-type-post" itemscope itemprop="blogPost">
+    
+        <h1 class="article-title">Java内存模型（JMM）</h1>
+    
+    <div class="article-meta">
+        
+        
+        
+        <span class="book">
+            <i class="iconfont icon-category"></i>
+            
+            <a  data-rel="Java并发">Java并发</a>
+            
+        </span>
+        
+        
+        <span class="tag">
+            <i class="iconfont icon-tag"></i>
+            
+            <a class="color2">Java并发</a>
+            
+        </span>
+        
+    </div>
+    <div class="article-meta">
+        
+            Created At : <time class="date" title='Updated At: 2021-03-01 21:42:40'>2021-03-01 21:42</time>
+        
+    </div>
+    <div class="article-meta">
+        
+        
+        <span id="busuanzi_container_page_pv">
+            Views 👀 :<span id="busuanzi_value_page_pv">
+                <span class="count-comment">
+                    <span class="spinner">
+                      <div class="cube1"></div>
+                      <div class="cube2"></div>
+                    </span>
+                </span>
+            </span>
+        </span>
+        
+        
+    </div>
+    
+    <div class="toc-ref">
+    
+        <ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Java内存模型"><span class="toc-text">Java内存模型</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#硬件内存结构"><span class="toc-text">硬件内存结构</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Java内存模型和硬件内存结构的关系"><span class="toc-text">Java内存模型和硬件内存结构的关系</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#共享对象的可见性"><span class="toc-text">共享对象的可见性</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#竞争条件"><span class="toc-text">竞争条件</span></a></li></ol></li></ol>
+    
+<style>
+    .left-col .switch-btn,
+    .left-col .switch-area {
+        display: none;
+    }
+    .toc-level-3 i,
+    .toc-level-3 ol {
+        display: none !important;
+    }
+</style>
+</div>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Java内存模型描述了Java虚拟机如何在计算机的内存（RAM）中工作。 Java虚拟机其实是个计算机的模型，因此该模型自然包含一个内存模型-那就是Java内存模型。</p>
+<p>如果要设计出行为表现正确的并发程序，就必须了解Java内存模型。 Java内存模型描述了不同线程如何以及何时可以看到被其他线程写入到共享变量的值，以及在必要时如何同步对共享变量的访问。</p>
+<p>原始的Java内存模型存在着欠缺，因此在Java 1.5版本中对Java内存模型进行了修订。 此版本的Java内存模型仍在Java 8中继续使用。</p>
+<h1 id="Java内存模型"><a href="#Java内存模型" class="headerlink" title="Java内存模型"></a>Java内存模型</h1><p><code>JVM</code>内部将内存分为线程堆栈（<code>thread stacks</code>）和堆(<code>heap</code>)。下图从逻辑角度阐明了Java内存模型：<br><img src="http://img.zhoubg.cn/FrxpxZG5pb-X_flvRVdawLWOBIDH" alt="image.png"></p>
+<p>Java虚拟机中运行的每个线程都有其自己的线程堆栈。线程堆栈包含了当前线程调用了哪些方法以及当前执行点的信息。我们将其称为“调用堆栈”。当线程执行其代码时，调用堆栈也随之改变。</p>
+<p>线程堆栈还包含正在执行的每个方法（调用堆栈上的所有方法）的所有局部变量。每个线程只能访问自己的线程堆栈。由线程创建的局部变量对其他的线程是不可见的。即使两个线程执行的代码完全相同，这两个线程仍将在各自的线程堆栈中创建该代码的局部变量。因此，每个线程对每个局部变量都有其自己的版本。</p>
+<p>所有原始类型的局部变量（ <code>boolean, byte, short, char, int, long, float, double</code>）都完全存储在线程堆栈中，对其他线程是不可见。一个线程可以将一个原始类型的变量副本传递给另一个线程，但是它不能共享变量本身。</p>
+<p>堆里面包含了Java应用程序中创建的所有对象，不管创建对象的线程是什么。这其中包括了基本数据类型的包装对象（例如Byte，Integer，Long等）。不管一个对象是作为方法的局部变量或者是类的成员变量，该对象本身仍然是存储在堆中的。</p>
+<p>说明了调用堆栈和存储在线程堆栈上的局部变量以及存储在堆上的对象的关系图：</p>
+<p><img src="http://img.zhoubg.cn/FnMVOeHXm3nfgwAWN94SWIAqjVbl" alt="image.png"></p>
+<p>局部变量可以是原始类型，在这种情况下，它完全保留在线程堆栈中。</p>
+<p>局部变量也可以是对对象的引用。在这种情况下，引用（局部变量）存储在线程堆栈中，但是对象本身存储在堆中。</p>
+<p>一个对象可能包含方法，而这些方法可能包含局部变量。虽然这些方法所属的对象存储在堆中，但这些局部变量还是存储在线程堆栈中。</p>
+<p>对象的成员变量与对象本身一起存储在堆中，不管成员变量是原始类型还是对对象的引用。</p>
+<p>静态类变量也与类定义一起存储在堆中。</p>
+<p>所有线程都可以通过对对象的引用访问堆上的对象。当线程可以访问某个对象时，它也可以访问该对象的成员变量。如果两个线程同时在同一个对象上调用方法，则它们都将有权访问该对象的成员变量，但是每个线程将拥有自己的局部变量副本。</p>
+<p>这是说明以上几点的图示：</p>
+<p><img src="http://img.zhoubg.cn/FgiKBonGjPNtXPF4PD43oeFKHBoh" alt="image.png"></p>
+<p>两个线程都具有一组局部变量。局部变量<code>Local variable 2</code>指向堆上的共享对象<code>Object3</code>。这两个线程分别具有对同一对象的不同引用。它们的引用是局部变量，因此存储在每个线程的自己的线程堆栈中。但是，两个不同的引用都指向存储在堆上的同一对象。</p>
+<p>请注意，共享对象<code>Object3</code>拥有两个成员变量，他们是引用类型，分别指向了对象<code>Object2</code> 和 对象<code>Object4</code>（如图中从<code>Object3</code>到<code>Object2</code>和<code>Object4</code>的箭头所示）。通过<code>Object3</code>中的这些成员变量引用，两个线程就可以访问<code>Object2</code>和<code>Object4</code>。</p>
+<p>该图中还显示了一个局部变量<code>Local variable 1</code>，该局部变量分别指向堆上的两个不同对象<code>Object1</code>和<code>Object5</code>,而不是同一个对象。理论上，当两个线程都引用了两个对象时，则两个线程都可以访问对<code>Object1</code>和对<code>Object5</code>。但是在上图中，每个线程仅具有对两个对象之一的引用,所有他们只能访问各自引用的对象。</p>
+<p>那么，哪种Java代码可能实现上面的内存图？好吧，看如下的代码，是不是很简单：</p>
+<pre><code class="java">public class MyRunnable implements Runnable() {
+
+    public void run() {
+        methodOne();
+    }
+
+    public void methodOne() {
+        int localVariable1 = 45;
+
+        MySharedObject localVariable2 = MySharedObject.sharedInstance;
+
+        //... do more with local variables.
+
+        methodTwo();
+    }
+
+    public void methodTwo() {
+        Integer localVariable1 = new Integer(99);
+
+        //... do more with local variable.
+    }
+}</code></pre>
+<pre><code class="java">public class MySharedObject {
+
+    //static variable pointing to instance of MySharedObject
+
+    public static final MySharedObject sharedInstance = new MySharedObject();
+
+    //member variables pointing to two objects on the heap
+
+    public Integer object2 = new Integer(22);
+    public Integer object4 = new Integer(44);
+
+    //member variables of primary type
+
+    public long member1 = 12345;
+    public long member2 = 67890;
+}</code></pre>
+<p>如果有两个线程正在执行<code>run（）</code>方法，那么前面显示的图就是结果。 <code>run（）</code>方法调用<code>methodOne（）</code>，<code>methodOne（）</code>调用<code>methodTwo（）</code>。</p>
+<p><code>methodOne（）</code>声明一个原始的局部变量（int类型的<code>localVariable1</code>）和一个作为对象引用的局部变量（<code>localVariable2</code>）。</p>
+<p>每个执行<code>methodOne（）</code>的线程将在各自的线程堆栈上创建自己的<code>localVariable1</code>和<code>localVariable2</code>副本。 <code>localVariable1</code>变量将完全的彼此分离，仅存在于每个线程的线程堆栈中。一个线程看不到另一个线程对其<code>localVariable1</code>副本所做的更改。</p>
+<p>每个执行<code>methodOne（）</code>的线程还将创建自己的<code>localVariable2</code>副本。但是，<code>localVariable2</code>的两个不同副本最终都指向堆上的同一对象。该代码将<code>localVariable2</code>设置为静态变量,变量引用指向的对象只有一个副本，并且此副本存储在堆中。因此，<code>localVariable2</code>的两个副本最终都指向静态变量引用的<code>MySharedObject</code>的同一实例。 <code>MySharedObject</code>实例也存储在堆中。它对应于上图中的<code>Object3</code>。</p>
+<p>注意<code>MySharedObject</code>类也包含两个成员变量。成员变量本身与对象一起存储在堆中。这两个成员变量指向另外两个<code>Integer</code>对象。这些整数对象对应于上图中的<code>Object2</code>和<code>Object4</code>。</p>
+<p>还要注意<code>methodTwo（）</code>如何创建一个名为<code>localVariable1</code>的局部变量。此局部变量是对Integer对象的对象引用。该方法将<code>localVariable1</code>引用设置为指向新的Integer实例。执行<code>methodTwo（）</code>的每个线程的<code>localVariable1</code>引用将存储在一个副本中。实例化的两个Integer对象将存储在堆上，但是由于该方法每次执行该方法时都会创建一个新的<code>Integer</code>对象，因此执行此方法的两个线程将创建单独的Integer实例。在<code>methodTwo（）</code>内部创建的Integer对象对应于上图中的<code>Object1</code>和<code>Object5</code>。</p>
+<p>还请注意类<code>MySharedObject</code>中的两个成员变量，其类型为<code>long</code>，这是原始类型。由于这些变量是成员变量，因此它们仍与对象一起存储在堆中。仅局部变量存储在线程堆栈上。</p>
+<h1 id="硬件内存结构"><a href="#硬件内存结构" class="headerlink" title="硬件内存结构"></a>硬件内存结构</h1><p>现代硬件内存体系结构与虚拟机内部的Java内存模型有所不同。了解硬件内存架构并了解Java内存模型如何与之协同工作同样也很重要。 本节将描述常见的硬件内存体系结构，下一节将描述Java内存模型如何与之协同工作。</p>
+<p>这是现代计算机硬件体系结构的简化图：</p>
+<p><img src="http://img.zhoubg.cn/Fiw4fKT3Hkfg1fVU4PfmYuG3539r" alt="image.png"></p>
+<p>现代计算机通常其中装有2个或更多的CPU，其中一些CPU也可能具有多个内核。关键是，在具有2个或更多CPU的现代计算机上，可能同时运行多个线程。每个CPU都可以在任何给定时间运行一个线程。这意味着，如果Java应用程序是多线程的，则每个CPU可能在Java应用程序中同时（并发）运行一个线程。</p>
+<p>每个CPU包含一组寄存器，这些寄存器本质上是CPU内存。 CPU在这些寄存器上执行操作的速度比对主存储器中的变量执行操作的速度快得多。这是因为CPU可以比访问主存储器更快地访问这些寄存器。</p>
+<p>每个CPU可能还具有一个CPU高速缓存存储层。实际上，大多数现代CPU都具有一定大小的缓存层。 CPU访问其高速缓存层比访问主存储器更快，但是通常不如访问寄存器的速度快。因此，CPU高速缓存内存访问速度介于寄存器和主内存的速度之间。某些CPU可能具有多个高速缓存层（1级缓存和2级缓存），但是了解Java内存模型如何与内存交互并不重要。重要的是要知道CPU可以具有某种高速缓存层。</p>
+<p>计算机还包含一个主存储区（RAM），所有CPU都可以访问主存储器，主存储区通常比CPU的缓存大得多。</p>
+<p>通常，当CPU需要访问主存储器时，它将部分主存储器内容读入其CPU高速缓存中，它甚至可以将缓存的一部分内容读入其内部寄存器，然后对其执行操作。当CPU需要将结果写回主存储器时，它将把值从其内部寄存器刷新到高速缓存，并在某个时候将值刷新回主存储器。</p>
+<p>当CPU需要将其他内容存储在高速缓存中时，通常会将高速缓存中已经存储的值刷新回主存储器。 CPU高速缓存可以一次将数据写入其部分缓存空间，并一次刷新其部分内存。它不必每次更新都读取/写入全部的缓存，通常，缓存在称为“缓存行”的较小存储块中更新，可以将一个或多个高速缓存行读入高速缓存存储器，并且可以将一个或多个高速缓存行再次刷新回主存储器。</p>
+<h1 id="Java内存模型和硬件内存结构的关系"><a href="#Java内存模型和硬件内存结构的关系" class="headerlink" title="Java内存模型和硬件内存结构的关系"></a>Java内存模型和硬件内存结构的关系</h1><p>如前所述，Java内存模型和硬件内存体系结构是不同的， 硬件内存体系结构不区分线程堆栈和堆。 在硬件上，线程堆栈和堆都位于主内存中；有时，部分线程堆栈和堆可能会出现在CPU缓存和内部CPU寄存器中。 下图对此进行了说明：</p>
+<p><img src="http://img.zhoubg.cn/FvN7YbRp9nIkK3I2aNRJuusCMr8S" alt="image.png"></p>
+<p>当对象和变量可以存储在计算机的各种不同存储区域中时，就可能会出现某些问题了，两个主要问题是：</p>
+<ul>
+<li>线程更新（写入）到共享变量的可见性。</li>
+<li>读取，检查和写入共享变量时的竞争条件。</li>
+</ul>
+<p>这两个问题将在以下各节中进行说明。</p>
+<h2 id="共享对象的可见性"><a href="#共享对象的可见性" class="headerlink" title="共享对象的可见性"></a>共享对象的可见性</h2><p>如果两个或多个线程共享一个对象，并且没有正确使用<code>volatitle</code>声明或同步，则一个线程对共享对象进行的更新可能对其他线程不可见。</p>
+<p>想象一下，共享对象最初存储在主存储器中，然后，在CPU上运行的一个线程将共享对象读入其CPU缓存中，在那里，它更改了共享对象。只要未将CPU高速缓存刷新回主内存，在其他CPU上运行的线程就看不到共享对象更改后的版本。这样，每个线程都可以拥有自己的共享对象副本，每个副本位于不同的CPU缓存中。</p>
+<p>下图说明了这种情况。在左CPU上运行的一个线程将共享对象复制到其CPU缓存中，并将其<code>count</code>变量值加一变成2,在右CPU上运行的其他线程看不到此更改，因为左线程还未将··更新刷新回主存储器中。</p>
+<p><img src="http://img.zhoubg.cn/Fh3rnLlrYdxSR685Nckw1Z3J5d5U" alt="image.png"></p>
+<p>要解决此问题，您可以使用Java的<code>volatile</code>关键字, <code>volatile</code>关键字可以确保给定的变量直接从主存储器中读取，并在更新时始终写回到主存储器中。</p>
+<h2 id="竞争条件"><a href="#竞争条件" class="headerlink" title="竞争条件"></a>竞争条件</h2><p>如果两个或多个线程共享一个对象，并且有多个线程更新该共享对象中的变量，则可能会发生竞争条件。</p>
+<p>想象一下，线程A将共享对象的变量<code>count</code>读入其CPU缓存中。还要想象一下，线程B的功能相同，但是它位于不同的CPU缓存中。现在线程A给<code>count</code>加1，线程B执行相同的操作，现在<code>count</code>已经加了两次，在每个CPU高速缓存中分别加了一次。</p>
+<p>如果这些增加是顺序执行的，则变成<code>count</code>将增加两次，并将原始值+ 2写回到主存储器。</p>
+<p>但是，这两个增量是在没有适当同步的情况下同时执行的，不管线程A和B中哪个线程将其更新后的<code>count</code>写回主存中，虽然有两个增量，但更新后的值仅比原始值大1。</p>
+<p>该图说明了如上所述的竞争条件问题的发生：</p>
+<p><img src="http://img.zhoubg.cn/FvB3aSSP2ql2ct0OoB_GJVkqqHFz" alt="image.png"></p>
+<p>要解决此问题，您可以使用Java同步块（<code>synchronized block</code>）。 同步块可确保在任何给定时间只有一个线程可以进入代码的给定关键部分。 同步块还保证从同步块中读取的所有变量都从主存储器中读取，并且当线程退出同步块时，所有更新的变量将再次刷新回主存储器，不管该变量有没有声明为<code>volatile</code>。</p>
+
+      
+       <hr><span style="font-style: italic;color: gray;"> 转载请注明来源，欢迎对文章中的引用来源进行考证，欢迎指出任何有错误或不够清晰的表达。可以在下面评论区评论，也可以邮件至 992132705@qq.com </span>
+    </div>
+</article>
+
+
+
+
+
+
+
+    
+
+
+
+
+    </div>
+    <div class="copyright">
+        <p class="footer-entry"><span class="miit">
+                <img src="/img/gov.png" title="中华人民共和国工业和信息化部">
+                <a href="http://beian.miit.gov.cn/" target="_blank" rel="noopener">粤ICP备18064823号</a>
+        </span>
+    
+    ©2016-2020 binxin
+</p>
+<p class="footer-entry">Built with <a href="https://hexo.io/" target="_blank">Hexo</a> and <a href="https://github.com/yelog/hexo-theme-3-hexo" target="_blank">3-hexo</a> theme</p>
+
+    </div>
+    <div class="full-toc">
+        <button class="full" data-title="切换全屏 快捷键 s"><span class="min "></span></button>
+<a class="" id="rocket" ></a>
+
+    </div>
+</div>
+
+</body>
+<script src="/js/jquery.pjax.js?v=1.1.0" ></script>
+
+<script src="/js/script.js?v=1.1.0" ></script>
+<script>
+    var img_resize = 'default';
+    function initArticle() {
+        /*渲染对应的表格样式*/
+        
+            $("#post .pjax table").addClass("green_title");
+        
+
+        /*渲染打赏样式*/
+        
+
+        /*高亮代码块行号*/
+        
+
+        /*访问数量*/
+        
+        $.getScript("//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js");
+        
+
+        /*代码高亮，行号对齐*/
+        $('.pre-numbering').css('line-height',$('.has-numbering').css('line-height'));
+
+        
+        
+    }
+
+    /*打赏页面隐藏与展示*/
+    
+
+</script>
+
+<!--加入行号的高亮代码块样式-->
+
+<!--自定义样式设置-->
+<style>
+    
+    
+    .nav {
+        width: 542px;
+    }
+    .nav.fullscreen {
+        margin-left: -542px;
+    }
+    .nav-left {
+        width: 120px;
+    }
+    
+    
+    @media screen and (max-width: 1468px) {
+        .nav {
+            width: 492px;
+        }
+        .nav.fullscreen {
+            margin-left: -492px;
+        }
+        .nav-left {
+            width: 100px;
+        }
+    }
+    
+    
+    @media screen and (max-width: 1024px) {
+        .nav {
+            width: 492px;
+            margin-left: -492px
+        }
+        .nav.fullscreen {
+            margin-left: 0;
+        }
+    }
+    
+    @media screen and (max-width: 426px) {
+        .nav {
+            width: 100%;
+        }
+        .nav-left {
+            width: 100%;
+        }
+    }
+    
+    
+    .nav-right .title-list nav a .post-title, .nav-right .title-list #local-search-result a .post-title {
+        color: #383636;
+    }
+    
+    
+    .nav-right .title-list nav a .post-date, .nav-right .title-list #local-search-result a .post-date {
+        color: #5e5e5f;
+    }
+    
+    
+    .nav-right nav a.hover, #local-search-result a.hover{
+        background-color: #e2e0e0;
+    }
+    
+    
+
+    /*列表样式*/
+    
+
+    /* 背景图样式 */
+    
+    
+
+
+    /*引用块样式*/
+    
+
+    /*文章列表背景图*/
+    
+
+    
+</style>
+
+
+
+
+
+
+
+</html>
