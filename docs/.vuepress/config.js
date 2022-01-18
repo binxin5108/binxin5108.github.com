@@ -24,6 +24,7 @@ module.exports = {
             items: [
               { text: 'Spring 学习笔记', link: '/note/spring/' },
               { text: 'Mybatis 学习笔记', link: '/note/mybatis/' },
+              { text: 'Mysql 学习笔记', link: '/note/mysql/' },
               {
                 text: 'TypeScript',
                 link: '/pages/51afd6/',
