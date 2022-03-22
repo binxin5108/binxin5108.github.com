@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<title>Markmap</title>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+}
+#mindmap {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+}
+</style>
+
+</head>
+<body>
+<svg id="mindmap"></svg>
+<script src="https://cdn.jsdelivr.net/npm/d3@6.7.0"></script><script src="https://cdn.jsdelivr.net/npm/markmap-view@0.2.7"></script><script>((c,d,p)=>{const{Markmap:g}=c();window.mm=g.create("svg#mindmap",d==null?void 0:d(),p)})(()=>window.markmap,c=>(c=c||window.d3,{color:(N=>E=>N(E.p.i))(c.scaleOrdinal(c.schemeCategory10))}),{"t":"heading","d":1,"p":{"lines":[0,1]},"v":"日志","c":[{"t":"heading","d":2,"p":{"lines":[2,3]},"v":"redolog","c":[{"t":"heading","d":3,"p":{"lines":[3,4]},"v":"用于保证crash-safe能力","c":[{"t":"list_item","d":5,"p":{"lines":[4,5]},"v":"异常重启，提交的数据不丢失"}]},{"t":"heading","d":3,"p":{"lines":[5,6]},"v":"参数：innodb_flush_log_at_trx_commit"},{"t":"heading","d":3,"p":{"lines":[7,8]},"v":"特点：","c":[{"t":"list_item","d":5,"p":{"lines":[8,9]},"v":"属于引擎层"},{"t":"list_item","d":5,"p":{"lines":[9,10]},"v":"物理日志"},{"t":"list_item","d":5,"p":{"lines":[10,11]},"v":"循环写"},{"t":"list_item","d":5,"p":{"lines":[11,12]},"v":"文件大小固定"}]}]},{"t":"heading","d":2,"p":{"lines":[13,14]},"v":"binlog","c":[{"t":"heading","d":3,"p":{"lines":[14,15]},"v":"归档日志用来同步/恢复数据"},{"t":"heading","d":3,"p":{"lines":[15,16]},"v":"参数：sync_binlog"},{"t":"heading","d":3,"p":{"lines":[16,17]},"v":"特点：","c":[{"t":"list_item","d":5,"p":{"lines":[17,18]},"v":"属于Server层"},{"t":"list_item","d":5,"p":{"lines":[18,19]},"v":"逻辑日志"},{"t":"list_item","d":5,"p":{"lines":[19,20]},"v":"追加写"},{"t":"list_item","d":5,"p":{"lines":[20,21]},"v":"文件大小不固定"}]}]},{"t":"heading","d":2,"p":{"lines":[22,23]},"v":"两阶段提交","c":[{"t":"heading","d":3,"p":{"lines":[23,24]},"v":"保持两份日志之间的逻辑一致，这样用日志恢复出来的库的状态和数据库本身的状态是一样的`"}]}]})</script>
+</body>
+</html>

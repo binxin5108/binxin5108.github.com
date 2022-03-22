@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<title>Markmap</title>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+}
+#mindmap {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+}
+</style>
+
+</head>
+<body>
+<svg id="mindmap"></svg>
+<script src="https://cdn.jsdelivr.net/npm/d3@6.7.0"></script><script src="https://cdn.jsdelivr.net/npm/markmap-view@0.2.7"></script><script>((c,d,p)=>{const{Markmap:g}=c();window.mm=g.create("svg#mindmap",d==null?void 0:d(),p)})(()=>window.markmap,c=>(c=c||window.d3,{color:(N=>E=>N(E.p.i))(c.scaleOrdinal(c.schemeCategory10))}),{"t":"heading","d":1,"p":{"lines":[0,1]},"v":"<strong>Mysql</strong>","c":[{"t":"heading","d":2,"p":{"lines":[2,3]},"v":"<strong>连接器</strong>","c":[{"t":"list_item","d":4,"p":{"lines":[3,4]},"v":"建立连接、获取权限、维持和管理连接"},{"t":"list_item","d":4,"p":{"lines":[4,5]},"v":"长连接、段连接"}]},{"t":"heading","d":2,"p":{"lines":[5,6]},"v":"查询缓存","c":[{"t":"list_item","d":4,"p":{"lines":[6,7]},"v":"往往弊大于利，8.0已移除"}]},{"t":"heading","d":2,"p":{"lines":[7,8]},"v":"<strong>分析器</strong>（做什么）","c":[{"t":"heading","d":3,"p":{"lines":[8,9]},"v":"词法分析","c":[{"t":"list_item","d":5,"p":{"lines":[9,10]},"v":"SQL 里每个字符串分别是什么，代表什么"}]},{"t":"heading","d":3,"p":{"lines":[10,11]},"v":"语法分析","c":[{"t":"list_item","d":5,"p":{"lines":[11,12]},"v":"根据语法规则，判断输入的 SQL 是否满足 MYSQL 语法"}]}]},{"t":"heading","d":2,"p":{"lines":[12,13]},"v":"<strong>优化器</strong>（怎么做）","c":[{"t":"list_item","d":4,"p":{"lines":[13,14]},"v":"决定使用哪个索引、决定表的连接顺序"}]},{"t":"heading","d":2,"p":{"lines":[14,15]},"v":"<strong>执行器</strong>","c":[{"t":"list_item","d":4,"p":{"lines":[15,16]},"v":"操作引擎，返回结果"}]},{"t":"heading","d":2,"p":{"lines":[16,17]},"v":"<strong>存储引擎</strong>","c":[{"t":"list_item","d":4,"p":{"lines":[17,18]},"v":"负责数据存储和提取"},{"t":"list_item","d":4,"p":{"lines":[18,19]},"v":"插件式：InnoDB、MyISAM、Memory"},{"t":"list_item","d":4,"p":{"lines":[19,20]},"v":"不同引擎共用一个Server层"}]}]})</script>
+</body>
+</html>
