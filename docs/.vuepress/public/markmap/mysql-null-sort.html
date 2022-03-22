@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<title>Markmap</title>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+}
+#mindmap {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+}
+</style>
+
+</head>
+<body>
+<svg id="mindmap"></svg>
+<script src="https://cdn.jsdelivr.net/npm/d3@6.7.0"></script><script src="https://cdn.jsdelivr.net/npm/markmap-view@0.2.7"></script><script>((c,d,p)=>{const{Markmap:g}=c();window.mm=g.create("svg#mindmap",d==null?void 0:d(),p)})(()=>window.markmap,c=>(c=c||window.d3,{color:(N=>E=>N(E.p.i))(c.scaleOrdinal(c.schemeCategory10))}),{"t":"heading","d":1,"p":{"lines":[0,1]},"v":"NULL值排序","c":[{"t":"heading","d":2,"p":{"lines":[3,4]},"v":"MYSQL 排序中 <code>NULl</code> 值小于任何 <code>NO-NULL</code> 值"},{"t":"heading","d":2,"p":{"lines":[5,6]},"v":"<code>NO-NULL</code> 升序，<code>NULL</code> 值排最后","c":[{"t":"list_item","d":4,"p":{"lines":[7,9]},"v":"使用减号（<code>-</code>）操作符:<br>\n<code>select * from user order by -date_login DESC</code>"},{"t":"list_item","d":4,"p":{"lines":[9,11]},"v":"使用 <code>IS NULL</code> 比较运算符<br>\n<code>select * from user order by name is null, name ASC;</code>"},{"t":"list_item","d":4,"p":{"lines":[11,13]},"v":"使用 <code>COALESCE</code> 函数<br>\n<code>select * from user order by coalesce(name,'zzz') ASC;</code>"}]},{"t":"heading","d":2,"p":{"lines":[14,15]},"v":"<code>NO-NULL</code> 降序，<code>NULL</code> 值排最前","c":[{"t":"list_item","d":4,"p":{"lines":[16,18]},"v":"使用 <code>IS NOT NULL</code> 比较运算符<br>\n<code>select * from user order by date_login is not null, date_login DESC;</code>"},{"t":"list_item","d":4,"p":{"lines":[18,20]},"v":"使用 <code>COALESCE</code> 函数<br>\n<code>select * from user order by coalesce(name,'zzz') DESC;</code>"}]}]})</script>
+</body>
+</html>
