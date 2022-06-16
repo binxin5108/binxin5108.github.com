@@ -42,6 +42,15 @@ module.exports = {
         ],
       },
       {
+        text: '云原生',
+        link: '/cloudnative/',
+        items: [
+          { text: 'docker', link: '/pages/0073e8/' },
+          { text: 'k8s', link: '/pages/203b72/' },
+          { text: 'kebesphere', link: '/pages/3ebd53/' },
+        ],
+      },
+      {
         text: '技术',
         link: '/technology/',
         items: [
@@ -272,11 +281,11 @@ module.exports = {
       {
         choosen: 'gitalk',
         options: {
-          clientID: '79dbe4c5cbe711607983',
-          clientSecret: '91ae7bd75e6763b665d318c5deb328ff07074d7d',
+          clientID: '3d0f1e8ba0a1925c11f6',
+          clientSecret: '41a2996702760ce55fe11c5bdcc33c578f46e7e2',
           repo: 'blog_gitalk', // GitHub 仓库
-          owner: 'zhoubg', // GitHub仓库所有者
-          admin: ['zhoubg'], // 对仓库有写权限的人
+          owner: 'binxin5108', // GitHub仓库所有者
+          admin: ['binxin5108','zhoubg'], // 对仓库有写权限的人
           // distractionFreeMode: true,
           pagerDirection: 'last', // 'first'正序 | 'last'倒序
           id: '<%- (frontmatter.permalink || frontmatter.to.path).slice(-16) %>', //  页面的唯一标识,长度不能超过50
